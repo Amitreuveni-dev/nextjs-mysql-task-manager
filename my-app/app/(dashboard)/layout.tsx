@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
+import { ChatCopilotServer } from "@/components/ai/chat-copilot-server";
 
 /**
  * Protected dashboard shell layout.
@@ -40,6 +41,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
+      <ChatCopilotServer />
     </div>
   );
 }

@@ -4,7 +4,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FolderOpen, CheckSquare, Clock, TrendingUp, Zap, ArrowRight, Kanban } from "lucide-react";
+import { FolderOpen, CheckSquare, Clock, TrendingUp, Zap, ArrowRight, Kanban, Bot } from "lucide-react";
+import { SmartInsights } from "./_components/server/smart-insights";
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -173,16 +174,21 @@ export default async function DashboardPage() {
               </CardHeader>
             </Card>
           </Link>
-          <Card className="border-dashed opacity-60">
+          <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <CardTitle className="text-sm text-muted-foreground">Coming in Phase 3</CardTitle>
+                <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
+                <CardTitle className="text-sm">AI Copilot</CardTitle>
               </div>
-              <CardDescription>AI Copilot — smart deadlines, task generation from natural language.</CardDescription>
+              <CardDescription>Click the floating bot button (bottom-right) to plan tasks, detect bottlenecks, and generate task lists from natural language.</CardDescription>
             </CardHeader>
           </Card>
         </div>
+      </section>
+
+      {/* ── Smart Insights ───────────────────────────────────────────────── */}
+      <section aria-label="Smart insights">
+        <SmartInsights />
       </section>
     </div>
   );
