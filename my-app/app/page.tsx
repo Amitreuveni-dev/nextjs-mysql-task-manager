@@ -1,13 +1,9 @@
-import React from 'react'
+import { redirect } from "next/navigation";
 
-const page = () => {
-  return (
-    <div>
-      <main className='flex min-h-screen items-center justify-center'>
-        <h1 className='text-4xl font-bold'>Hello World</h1>
-      </main>
-    </div>
-  )
+/**
+ * Root "/" redirects to /dashboard.
+ * Middleware intercepts unauthenticated users and sends them to /login.
+ */
+export default function RootPage() {
+  redirect("/dashboard");
 }
-
-export default page
