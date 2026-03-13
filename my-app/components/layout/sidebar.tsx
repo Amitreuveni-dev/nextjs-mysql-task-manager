@@ -45,8 +45,8 @@ export function Sidebar() {
   const sidebarWidth = collapsed ? "4rem" : "15rem";
 
   const transition = shouldReduceMotion
-    ? { duration: 0 }
-    : { type: "spring", stiffness: 300, damping: 30 };
+    ? ({ duration: 0 } as const)
+    : ({ type: "spring" as const, stiffness: 300, damping: 30 });
 
   return (
     <TooltipProvider delayDuration={0}>

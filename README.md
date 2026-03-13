@@ -30,7 +30,15 @@ nextjs-mysql-task-manager/
 │   │   │   └── register/page.tsx
 │   │   ├── (dashboard)/            # Route group: protected pages
 │   │   │   ├── layout.tsx          # Sidebar + Navbar shell
-│   │   │   └── dashboard/page.tsx  # Dashboard home
+│   │   │   ├── dashboard/page.tsx  # Dashboard home
+│   │   │   └── projects/           # Projects list + Kanban board
+│   │   │       ├── page.tsx        # /dashboard/projects
+│   │   │       ├── _components/server/   # Server: data fetching
+│   │   │       ├── _components/client/   # Client: interactive UI
+│   │   │       └── [projectId]/    # /dashboard/projects/:id (Kanban)
+│   │   │           ├── page.tsx
+│   │   │           ├── _components/server/  # board-data.tsx (fetches tasks)
+│   │   │           └── _components/client/  # kanban-board, column, task-card, task-modal
 │   │   ├── api/auth/[...nextauth]/ # NextAuth route handler
 │   │   ├── globals.css             # Tailwind v4 + theme variables
 │   │   ├── layout.tsx              # Root layout (ThemeProvider)
@@ -40,11 +48,14 @@ nextjs-mysql-task-manager/
 │   │   ├── providers/              # ThemeProvider
 │   │   └── ui/                     # shadcn/ui primitives
 │   ├── lib/
-│   │   ├── actions/auth.ts         # Server Actions: register, login
+│   │   ├── actions/
+│   │   │   ├── auth.ts             # Server Actions: register, login
+│   │   │   ├── tasks.ts            # Server Actions: createTask, updateTaskStatus, editTask, deleteTask
+│   │   │   └── projects.ts         # Server Actions: createProject, deleteProject
 │   │   ├── prisma.ts               # Prisma client singleton
 │   │   └── utils.ts                # cn() class helper
 │   ├── prisma/
-│   │   └── schema.prisma           # User, Project, Task models
+│   │   └── schema.prisma           # User, Project, Task models (with Priority enum)
 │   ├── types/
 │   │   └── next-auth.d.ts          # Session type augmentation
 │   ├── auth.config.ts              # Edge-safe NextAuth config (middleware)
@@ -72,6 +83,39 @@ nextjs-mysql-task-manager/
 6. **No inline styles** — use Tailwind utilities or CSS variables only.
 
 7. **`useReducedMotion` gate** — any Framer Motion animation must check `useReducedMotion()` and disable/minimize if `true`.
+
+---
+
+## Task Schema
+
+```prisma
+enum Priority { LOW  MEDIUM  HIGH }
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String                        // max 100 chars (Zod)
+  description String?                       // max 500 chars (Zod)
+  status      String   @default("TODO")     // "TODO" | "IN_PROGRESS" | "COMPLETED"
+  priority    Priority @default(MEDIUM)     // LOW | MEDIUM | HIGH
+  projectId   Int
+  project     Project  @relation(...)       // onDelete: Cascade
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+```
+
+## Server Actions
+
+| Action | File | Description |
+|---|---|---|
+| `createTask(projectId, _prev, formData)` | `lib/actions/tasks.ts` | Creates a task; validates ownership via `projectId → userId` |
+| `updateTaskStatus(taskId, status)` | `lib/actions/tasks.ts` | Updates task column; used by drag-and-drop |
+| `editTask(taskId, _prev, formData)` | `lib/actions/tasks.ts` | Edits title/description/priority; re-validates ownership |
+| `deleteTask(taskId)` | `lib/actions/tasks.ts` | Hard-deletes a task; re-validates ownership |
+| `createProject(_prev, formData)` | `lib/actions/projects.ts` | Creates a project for the authenticated user |
+| `deleteProject(projectId)` | `lib/actions/projects.ts` | Deletes project + all tasks (cascade); redirects to `/dashboard/projects` |
+
+All actions: authenticate with `auth()`, validate input with **Zod**, and call `revalidatePath()` to refresh server cache.
 
 ---
 
@@ -131,11 +175,16 @@ Visit [http://localhost:3000](http://localhost:3000) — you'll be redirected to
   - Collapsible sidebar + accessible navbar
   - Register + Login pages with server actions
 
-- [ ] **Phase 2: Kanban Board & Task Logic**
-  - Drag-and-drop Kanban board (todo → in-progress → done)
-  - Task CRUD with priority, labels, and due dates
-  - Project management with member invites
-  - Real-time optimistic updates
+- [X] **Phase 2: Kanban Board & Task Logic**
+  - Drag-and-drop Kanban board (To Do → In Progress → Completed) via `@dnd-kit`
+  - Keyboard-accessible drag & drop (Space/Arrows to move tasks)
+  - Optimistic updates with `useOptimistic` — instant UI response
+  - Task CRUD: create, edit, delete with priority (Low/Medium/High) badges
+  - Project management: create/delete projects with task counts
+  - Zod validation on all Server Actions
+  - Server/Client component split per route (`_components/server/` + `_components/client/`)
+  - Skeleton loaders via `<Suspense>` boundaries
+  - shadcn/ui Dialog, Select, Textarea added
 
 - [ ] **Phase 3: AI Copilot & Smart Deadlines**
   - AI task generation from natural language
