@@ -114,6 +114,7 @@ model Task {
 | `deleteTask(taskId)` | `lib/actions/tasks.ts` | Hard-deletes a task; re-validates ownership |
 | `createProject(_prev, formData)` | `lib/actions/projects.ts` | Creates a project for the authenticated user |
 | `deleteProject(projectId)` | `lib/actions/projects.ts` | Deletes project + all tasks (cascade); redirects to `/dashboard/projects` |
+| `bulkInsertAITasks(projectId, tasks[])` | `lib/actions/ai.ts` | Validates and bulk-inserts AI-generated tasks into a project; verifies ownership |
 
 All actions: authenticate with `auth()`, validate input with **Zod**, and call `revalidatePath()` to refresh server cache.
 
@@ -143,6 +144,9 @@ DATABASE_URL="mysql://user:password@localhost:3306/taskmanager"
 # Generate with: openssl rand -base64 32
 AUTH_SECRET="your-secret-here"
 AUTH_URL="http://localhost:3000"
+
+# Phase 3 — AI Copilot
+OPENAI_API_KEY="sk-..."
 ```
 
 ### 4. Set up the database
@@ -186,11 +190,28 @@ Visit [http://localhost:3000](http://localhost:3000) — you'll be redirected to
   - Skeleton loaders via `<Suspense>` boundaries
   - shadcn/ui Dialog, Select, Textarea added
 
-- [ ] **Phase 3: AI Copilot & Smart Deadlines**
-  - AI task generation from natural language
-  - Smart deadline suggestions based on workload
-  - Meeting-to-task extraction
-  - Progress analytics and burndown charts
+- [X] **Phase 3: AI Copilot & Smart Insights**
+  - Floating AI chat bubble (WCAG 2.1 AA accessible) powered by OpenAI `gpt-4o-mini` via Vercel AI SDK
+  - Streaming responses via `/api/chat` — session-authenticated, injects full task context
+  - Natural-language task generation (e.g., "plan my house move") with one-click bulk insert into any project
+  - Smart Insights widget on dashboard — detects bottlenecks, stalled projects, high-priority backlog
+  - `aria-live="polite"` for AI messages · focus management on panel open/close · Escape to dismiss
+  - `useReducedMotion()` gate on all animations
+
+---
+
+## Accessibility Statement
+
+SyncroMind AI targets **WCAG 2.1 Level AA** compliance:
+
+- All interactive elements are keyboard-navigable (Tab, Enter, Space, Escape)
+- AI chat panel uses `role="dialog"` + `aria-modal="true"`; focus moves into the input on open; Escape returns focus to the trigger
+- AI messages are announced by screen readers via `aria-live="polite"` on the message log
+- Task insertion confirmations use a dedicated `aria-live="polite"` region
+- All decorative icons use `aria-hidden="true"`; controls have explicit `aria-label`
+- Framer Motion animations respect `prefers-reduced-motion` via `useReducedMotion()`
+- `rem` units throughout for user font-size scaling
+- Color contrast meets AA ratios in both light and dark themes
 
 ---
 
