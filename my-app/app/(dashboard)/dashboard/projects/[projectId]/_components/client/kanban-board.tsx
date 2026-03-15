@@ -23,9 +23,9 @@ export type TaskType = {
 };
 
 const COLUMNS = [
-  { id: "TODO", label: "To Do", accent: "bg-blue-500" },
-  { id: "IN_PROGRESS", label: "In Progress", accent: "bg-amber-500" },
-  { id: "COMPLETED", label: "Completed", accent: "bg-green-500" },
+  { id: "TODO",        label: "To Do",       accent: "bg-blue-500",    headerBg: "bg-blue-50/70 dark:bg-blue-950/20",    countCn: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  { id: "IN_PROGRESS", label: "In Progress", accent: "bg-amber-500",   headerBg: "bg-amber-50/70 dark:bg-amber-950/20",  countCn: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  { id: "COMPLETED",   label: "Completed",   accent: "bg-emerald-500", headerBg: "bg-emerald-50/70 dark:bg-emerald-950/20", countCn: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
 ] as const;
 
 type ModalState = { open: boolean; mode: "create" | "edit"; task?: TaskType; defaultStatus?: string };
@@ -110,6 +110,8 @@ export function KanbanBoard({ tasks, projectId, projectName }: { tasks: TaskType
               id={col.id}
               label={col.label}
               accent={col.accent}
+              headerBg={col.headerBg}
+              countCn={col.countCn}
               tasks={optimisticTasks.filter((t) => t.status === col.id)}
               onAddTask={() => setModal({ open: true, mode: "create", defaultStatus: col.id })}
               onEditTask={(task) => setModal({ open: true, mode: "edit", task })}

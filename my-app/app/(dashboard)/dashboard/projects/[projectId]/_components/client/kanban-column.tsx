@@ -3,7 +3,6 @@
 import { useDroppable } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { TaskCard } from "./task-card";
 import { cn } from "@/lib/utils";
 import type { TaskType } from "./kanban-board";
@@ -12,25 +11,39 @@ type KanbanColumnProps = {
   id: string;
   label: string;
   accent: string;
+  headerBg: string;
+  countCn: string;
   tasks: TaskType[];
   onAddTask: () => void;
   onEditTask: (task: TaskType) => void;
   onDeleteTask: (taskId: number) => void;
 };
 
-export function KanbanColumn({ id, label, accent, tasks, onAddTask, onEditTask, onDeleteTask }: KanbanColumnProps) {
+export function KanbanColumn({ id, label, accent, headerBg, countCn, tasks, onAddTask, onEditTask, onDeleteTask }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
-    <div className="flex flex-col w-[18rem] min-w-[18rem] rounded-xl border bg-muted/30" aria-label={`${label} column, ${tasks.length} tasks`}>
+    <div className="flex flex-col w-[18rem] min-w-[18rem] rounded-xl border border-border/60 bg-muted/20 overflow-hidden shadow-sm" aria-label={`${label} column, ${tasks.length} tasks`}>
+
+      {/* Colored top stripe */}
+      <div className={cn("h-1 w-full shrink-0", accent)} aria-hidden="true" />
+
       {/* Column header */}
-      <div className="flex items-center justify-between px-3 pt-3 pb-2">
+      <div className={cn("flex items-center justify-between px-3 pt-2.5 pb-2.5", headerBg)}>
         <div className="flex items-center gap-2">
           <span className={cn("h-2 w-2 rounded-full shrink-0", accent)} aria-hidden="true" />
           <span className="font-semibold text-sm">{label}</span>
-          <Badge variant="secondary" className="text-xs h-5 px-1.5">{tasks.length}</Badge>
+          <span className={cn("inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full text-xs font-semibold", countCn)}>
+            {tasks.length}
+          </span>
         </div>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onAddTask} aria-label={`Add task to ${label}`}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 hover:bg-black/5 dark:hover:bg-white/5"
+          onClick={onAddTask}
+          aria-label={`Add task to ${label}`}
+        >
           <Plus className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
