@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Folder, Trash2, ArrowRight, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { deleteProject } from "@/lib/actions/projects";
+import { deleteProject } from "@/lib/server/projects";
 import { cn } from "@/lib/utils";
 
 type ProjectCardProps = {
