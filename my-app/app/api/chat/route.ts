@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { streamText, convertToModelMessages, UIMessage } from "ai";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     : "No projects or tasks yet.";
 
   const result = streamText({
-    model: openai("gpt-4o-mini"),
+    model: anthropic("claude-haiku-4-5-20251001"),
     system: `You are an expert Task Productivity Copilot for SyncroMind AI. Help users plan, organize, and manage tasks efficiently.
 
 User's current task context:
