@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
@@ -11,10 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+function RegisteredBanner() {
   const searchParams = useSearchParams();
-  const justRegistered = searchParams.get("registered") === "true";
+  if (searchParams.get("registered") !== "true") return null;
+  return (
+    <div role="status" aria-live="polite" className="mb-4 flex items-center gap-2 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400">
+      <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+      Account created! You can now sign in.
+    </div>
+  );
+}
 
+export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginUser, {});
 
   return (
@@ -30,16 +39,9 @@ export default function LoginPage() {
 
       <CardContent>
         {/* Success banner after registration */}
-        {justRegistered && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="mb-4 flex items-center gap-2 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400"
-          >
-            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-            Account created! You can now sign in.
-          </div>
-        )}
+        <Suspense>
+          <RegisteredBanner />
+        </Suspense>
 
         {/* Error banner */}
         {state.error && (
