@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { createTask, editTask } from "@/lib/actions/tasks";
+import { createTask, editTask } from "@/lib/server/tasks";
 import type { TaskType } from "./kanban-board";
 
 type TaskModalProps = {
@@ -22,10 +22,12 @@ type TaskModalProps = {
 export function TaskModal({ open, onOpenChange, mode, projectId, task, defaultStatus }: TaskModalProps) {
   const action = mode === "create" ? createTask.bind(null, projectId) : editTask.bind(null, task!.id);
   const [state, formAction, isPending] = useActionState(action, {});
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
 
   useEffect(() => {
-    if (state.success) onOpenChange(false);
-  }, [state.success, onOpenChange]);
+    if (state.success) onOpenChangeRef.current(false);
+  }, [state.success]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,6 +57,16 @@ export function TaskModal({ open, onOpenChange, mode, projectId, task, defaultSt
                 <SelectItem value="HIGH">High</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="task-due">Due date <span className="text-muted-foreground">(optional)</span></Label>
+            <Input
+              id="task-due"
+              name="dueDate"
+              type="date"
+              defaultValue={task?.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""}
+              aria-label="Due date"
+            />
           </div>
           {/* Preserve the column status when creating from a specific column */}
           {mode === "create" && defaultStatus && (

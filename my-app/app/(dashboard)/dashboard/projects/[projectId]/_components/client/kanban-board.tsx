@@ -9,7 +9,7 @@ import Link from "next/link";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard } from "./task-card";
 import { TaskModal } from "./task-modal";
-import { updateTaskStatus, deleteTask } from "@/lib/actions/tasks";
+import { updateTaskStatus, deleteTask } from "@/lib/server/tasks";
 import { Button } from "@/components/ui/button";
 
 export type TaskType = {
@@ -18,6 +18,7 @@ export type TaskType = {
   description: string | null;
   status: string;
   priority: string;
+  dueDate: Date | null;
   createdAt: Date;
 };
 
