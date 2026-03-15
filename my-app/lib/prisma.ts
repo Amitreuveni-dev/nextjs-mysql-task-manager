@@ -12,10 +12,7 @@ function createPrismaClient() {
     password: url.password,
     database: url.pathname.slice(1),
   });
-  return new PrismaClient({
-    adapter,
-    log: ["error", "warn"],
-  });
+  return new PrismaClient({ adapter, log: ["error", "warn"] });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();

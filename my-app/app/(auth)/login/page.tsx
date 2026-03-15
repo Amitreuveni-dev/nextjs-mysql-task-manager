@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
@@ -44,9 +45,9 @@ export default function LoginPage() {
 
       <CardContent>
         {/* Success banners after registration / password reset */}
-        <React.Suspense fallback={null}>
+        <Suspense fallback={null}>
           <LoginBanner />
-        </React.Suspense>
+        </Suspense>
 
         {/* Error banner */}
         {state.error && (
