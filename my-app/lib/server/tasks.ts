@@ -11,6 +11,7 @@ const TaskSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title too long"),
   description: z.string().max(500, "Description too long").optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]).default("MEDIUM"),
+  dueDate: z.string().optional().transform(v => (v ? new Date(v) : undefined)),
 });
 
 async function getAuthedUserId() {
@@ -35,12 +36,14 @@ export async function createTask(projectId: number, _prev: TaskActionState, form
       title: formData.get("title"),
       description: formData.get("description") || undefined,
       priority: formData.get("priority") || "MEDIUM",
+      dueDate: formData.get("dueDate") || undefined,
     });
     if (!parsed.success) return { error: parsed.error.issues[0].message };
 
     const status = (formData.get("status") as string) || "TODO";
     await prisma.task.create({ data: { ...parsed.data, projectId, status } });
     revalidatePath(`/dashboard/projects/${projectId}`);
+    revalidatePath("/dashboard/calendar");
     return { success: "Task created!" };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Failed to create task" };
@@ -68,11 +71,13 @@ export async function editTask(taskId: number, _prev: TaskActionState, formData:
       title: formData.get("title"),
       description: formData.get("description") || undefined,
       priority: formData.get("priority") || "MEDIUM",
+      dueDate: formData.get("dueDate") || undefined,
     });
     if (!parsed.success) return { error: parsed.error.issues[0].message };
 
     await prisma.task.update({ where: { id: taskId }, data: parsed.data });
     revalidatePath(`/dashboard/projects/${task.projectId}`);
+    revalidatePath("/dashboard/calendar");
     return { success: "Task updated!" };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Failed to update task" };
@@ -85,6 +90,7 @@ export async function deleteTask(taskId: number): Promise<TaskActionState> {
     const task = await verifyTaskOwnership(taskId, userId);
     await prisma.task.delete({ where: { id: taskId } });
     revalidatePath(`/dashboard/projects/${task.projectId}`);
+    revalidatePath("/dashboard/calendar");
     return { success: "Task deleted" };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Failed to delete task" };

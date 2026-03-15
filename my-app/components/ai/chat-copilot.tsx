@@ -8,7 +8,7 @@ import { Bot, X, Send, Loader2, ListPlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { bulkInsertAITasks } from "@/lib/actions/ai";
+import { bulkInsertAITasks } from "@/lib/server/ai";
 
 type Project = { id: number; name: string };
 type AITask = { title: string; description?: string; priority?: string };
