@@ -96,3 +96,22 @@ export async function deleteTask(taskId: number): Promise<TaskActionState> {
     return { error: e instanceof Error ? e.message : "Failed to delete task" };
   }
 }
+
+export async function getFocusTasks() {
+  try {
+    const userId = await getAuthedUserId();
+    const tasks = await prisma.task.findMany({
+      where: { project: { userId }, status: { in: ["TODO", "IN_PROGRESS"] } },
+      include: { project: { select: { name: true } } },
+      orderBy: [{ dueDate: "asc" }, { createdAt: "asc" }],
+      take: 20,
+    });
+    const order = { HIGH: 0, MEDIUM: 1, LOW: 2 } as const;
+    return tasks
+      .sort((a, b) => order[a.priority] - order[b.priority])
+      .slice(0, 8)
+      .map(t => ({ id: t.id, title: t.title, priority: t.priority, status: t.status, projectName: t.project.name }));
+  } catch {
+    return [];
+  }
+}
