@@ -11,6 +11,7 @@ function createPrismaClient() {
     user: url.username,
     password: url.password,
     database: url.pathname.slice(1),
+    allowPublicKeyRetrieval: true,
   });
   return new PrismaClient({ adapter, log: ["error", "warn"] });
 }

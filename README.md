@@ -15,7 +15,7 @@
 | Styling      | Tailwind CSS v4 + shadcn/ui                         |
 | Animations   | Framer Motion (with `useReducedMotion` support)     |
 | Icons        | Lucide React                                        |
-| AI           | Vercel AI SDK + OpenAI `gpt-4o-mini`                |
+| AI           | Vercel AI SDK + Anthropic `claude-haiku-4-5`        |
 
 ---
 
@@ -43,9 +43,13 @@ nextjs-mysql-task-manager/
 │   │   │       │       ├── page.tsx
 │   │   │       │       ├── _components/server/
 │   │   │       │       └── _components/client/
-│   │   │       ├── calendar/page.tsx   # /dashboard/calendar
-│   │   │       ├── settings/page.tsx   # /dashboard/settings
-│   │   │       └── profile/page.tsx    # /dashboard/profile
+│   │   │       ├── calendar/page.tsx        # /dashboard/calendar
+│   │   │       ├── settings/page.tsx        # /dashboard/settings
+│   │   │       ├── profile/page.tsx         # /dashboard/profile
+│   │   │       ├── mind-center/page.tsx     # /dashboard/mind-center (AI analytics — Phase 6)
+│   │   │       ├── insights/page.tsx        # /dashboard/insights (daily feedback — Phase 6)
+│   │   │       ├── focus/page.tsx           # /dashboard/focus (Focus Room — Phase 6)
+│   │   │       └── knowledge/page.tsx       # /dashboard/knowledge (Knowledge Base — Phase 6)
 │   │   ├── api/
 │   │   │   ├── auth/[...nextauth]/  # NextAuth route handler
 │   │   │   └── chat/route.ts        # AI streaming endpoint
@@ -54,6 +58,7 @@ nextjs-mysql-task-manager/
 │   │   └── page.tsx                 # Redirects → /dashboard
 │   ├── components/
 │   │   ├── ai/                     # ChatCopilot (client + server wrapper)
+│   │   ├── accessibility/          # A11y panel (contrast, motion, focus controls)
 │   │   ├── layout/                 # Sidebar, Navbar
 │   │   ├── providers/              # ThemeProvider
 │   │   └── ui/                     # shadcn/ui primitives
@@ -194,8 +199,8 @@ DATABASE_URL="mysql://user:password@localhost:3306/taskmanager"
 AUTH_SECRET="your-secret-here"
 AUTH_URL="http://localhost:3000"
 
-# AI Copilot — get a key at platform.openai.com
-OPENAI_API_KEY="sk-..."
+# AI Copilot — get a key at console.anthropic.com
+ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 ### 4. Set up the database
@@ -243,7 +248,7 @@ Visit [http://localhost:3000](http://localhost:3000) — you'll be redirected to
   - shadcn/ui Dialog, Select, Textarea added
 
 - [X] **Phase 3: AI Copilot & Smart Insights**
-  - Floating AI chat bubble (WCAG 2.1 AA accessible) powered by OpenAI `gpt-4o-mini` via Vercel AI SDK
+  - Floating AI chat bubble (WCAG 2.1 AA accessible) powered by Anthropic `claude-haiku-4-5` via Vercel AI SDK
   - Streaming responses via `/api/chat` — session-authenticated, injects full task context
   - Natural-language task generation (e.g., "plan my house move") with one-click bulk insert into any project
   - Smart Insights widget on dashboard — detects bottlenecks, stalled projects, high-priority backlog
@@ -258,8 +263,22 @@ Visit [http://localhost:3000](http://localhost:3000) — you'll be redirected to
   - All server actions moved to `lib/server/` (from `lib/actions/`)
   - Route structure fixed: all dashboard sub-pages now correctly under `(dashboard)/dashboard/`
 
-- [ ] **Phase 5 (remaining)**
-  - AI Copilot debugging — requires `OPENAI_API_KEY` in `.env` to activate
+- [X] **Phase 5: UI Redesign & Polish**
+  - Full visual overhaul — sidebar, navbar, auth layout, dashboard, kanban board, global CSS
+  - Suspense `loading.tsx` skeletons for all dashboard routes (dashboard, projects, kanban, calendar, settings, profile)
+  - Accessibility panel (`components/accessibility/a11y-panel.tsx`) — contrast, motion, focus-visible controls
+  - Switched AI provider from OpenAI → Anthropic `claude-haiku-4-5` via `@ai-sdk/anthropic`
+  - Fixed Prisma MariaDB adapter connection for MySQL 9.x (`allowPublicKeyRetrieval: true`)
+
+- [X] **Phase 6: Premium Navigation & Execution Suite**
+  - Sidebar redesigned with glassmorphism (`glass-sidebar`), grouped nav sections (Core / AI Intelligence / Execution), and Framer Motion `layoutId` sliding active-state pill
+  - `/dashboard/mind-center` — per-project health scores (0–100), bottleneck detection, overdue penalties, avg health summary
+  - `/dashboard/insights` — 7-day SVG bar chart (created vs completed), status breakdown, this-week activity panel
+  - `/dashboard/focus` — interactive Pomodoro timer (25/5/15 min modes, live countdown, session counter) + live DB task queue sorted by priority
+  - `/dashboard/knowledge` — 17-article searchable knowledge base with category filter pills (Getting Started, AI Features, Best Practices, Focus Room, Keyboard Shortcuts)
+  - `lib/server/analytics.ts` — `getProjectHealth()` + `getInsightsStats()` server actions
+  - `lib/server/tasks.ts` — `getFocusTasks()` server action
+  - Extended gradient palette (`gradient-warm`, `gradient-success`, `gradient-violet`) in `globals.css`
 
 ---
 
@@ -267,7 +286,7 @@ Visit [http://localhost:3000](http://localhost:3000) — you'll be redirected to
 
 > Things that are not yet built or need fixing.
 
-- [ ] **AI Copilot** — code is complete; add `OPENAI_API_KEY=sk-...` to `my-app/.env` to enable
+- [ ] **AI Copilot** — `ANTHROPIC_API_KEY` is set in `.env`; add credits at console.anthropic.com/settings/billing to activate
 
 ---
 
