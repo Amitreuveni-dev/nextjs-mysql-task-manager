@@ -19,7 +19,7 @@ const NAV_GROUPS: Array<{ label: string; items: NavItem[] }> = [
     label: "Core",
     items: [
       { label: "Dashboard",   href: "/dashboard",          icon: LayoutDashboard, exact: true },
-      { label: "Smart Board", href: "/dashboard/projects", icon: Kanban },
+      { label: "Projects", href: "/dashboard/projects", icon: Kanban },
       { label: "Calendar",    href: "/dashboard/calendar", icon: CalendarDays },
     ],
   },

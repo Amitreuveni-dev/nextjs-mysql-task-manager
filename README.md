@@ -169,6 +169,7 @@ model PasswordResetToken {
 | `bulkInsertAITasks(projectId, tasks[])` | `lib/server/ai.ts` | Validates and bulk-inserts AI-generated tasks into a project |
 | `updateName(_prev, formData)` | `lib/server/user.ts` | Updates the authenticated user's display name |
 | `updatePassword(_prev, formData)` | `lib/server/user.ts` | Verifies current password, sets new one |
+| `searchProjectsAndTasks(query)` | `lib/server/search.ts` | Full-text search across the user's projects and tasks (max 5 each); used by the navbar search box |
 
 All actions: authenticate with `auth()`, validate input with **Zod**, and call `revalidatePath()` to refresh server cache.
 
