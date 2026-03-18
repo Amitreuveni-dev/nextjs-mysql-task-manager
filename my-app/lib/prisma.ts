@@ -12,6 +12,7 @@ function createPrismaClient() {
     password: url.password,
     database: url.pathname.slice(1),
     allowPublicKeyRetrieval: true,
+    ssl: process.env.NODE_ENV === "production",
   });
   return new PrismaClient({ adapter, log: ["error", "warn"] });
 }
