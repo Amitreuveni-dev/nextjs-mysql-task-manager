@@ -38,8 +38,8 @@ export default async function FocusPage() {
       <div className="grid gap-3 sm:grid-cols-3" role="region" aria-label="Focus stats">
         {[
           { icon: Flame,        label: "Open Tasks",      value: String(tasks.length),                      gradient: "gradient-warm" },
-          { icon: Timer,        label: "High Priority",   value: String(tasks.filter(t => t.priority === "HIGH").length),  gradient: "gradient-primary" },
-          { icon: CheckSquare2, label: "In Progress",     value: String(tasks.filter(t => t.status === "IN_PROGRESS").length), gradient: "gradient-success" },
+          { icon: Timer,        label: "High Priority",   value: String(tasks.filter((t: typeof tasks[number]) => t.priority === "HIGH").length),  gradient: "gradient-primary" },
+          { icon: CheckSquare2, label: "In Progress",     value: String(tasks.filter((t: typeof tasks[number]) => t.status === "IN_PROGRESS").length), gradient: "gradient-success" },
         ].map(({ icon: Icon, label, value, gradient }) => (
           <div key={label} className="rounded-2xl border border-border/60 bg-card shadow-sm p-4 flex items-center gap-3">
             <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", gradient)}>
