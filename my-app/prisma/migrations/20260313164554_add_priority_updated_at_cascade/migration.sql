@@ -6,22 +6,22 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `project` DROP FOREIGN KEY `Project_userId_fkey`;
+ALTER TABLE `Project` DROP FOREIGN KEY `Project_userId_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `task` DROP FOREIGN KEY `Task_projectId_fkey`;
+ALTER TABLE `Task` DROP FOREIGN KEY `Task_projectId_fkey`;
 
 -- DropIndex
-DROP INDEX `Project_userId_fkey` ON `project`;
+DROP INDEX `Project_userId_fkey` ON `Project`;
 
 -- DropIndex
-DROP INDEX `Task_projectId_fkey` ON `task`;
+DROP INDEX `Task_projectId_fkey` ON `Task`;
 
 -- AlterTable
-ALTER TABLE `project` ADD COLUMN `updatedAt` DATETIME(3) NOT NULL;
+ALTER TABLE `Project` ADD COLUMN `updatedAt` DATETIME(3) NOT NULL;
 
 -- AlterTable
-ALTER TABLE `task` ADD COLUMN `priority` ENUM('LOW', 'MEDIUM', 'HIGH') NOT NULL DEFAULT 'MEDIUM',
+ALTER TABLE `Task` ADD COLUMN `priority` ENUM('LOW', 'MEDIUM', 'HIGH') NOT NULL DEFAULT 'MEDIUM',
     ADD COLUMN `updatedAt` DATETIME(3) NOT NULL,
     MODIFY `status` VARCHAR(191) NOT NULL DEFAULT 'TODO';
 
