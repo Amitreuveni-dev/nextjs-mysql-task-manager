@@ -45,7 +45,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       </div>
 
       <CalendarGrid
-        tasks={tasks.map(t => ({ ...t, dueDate: t.dueDate! }))}
+        tasks={tasks.map((t: typeof tasks[number]) => ({ ...t, dueDate: t.dueDate! }))}
         year={year}
         month={monthIndex}
         startOfMonth={startOfMonth}
