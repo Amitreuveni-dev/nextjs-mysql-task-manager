@@ -74,7 +74,8 @@
       "Bash(tasklist)",
       "Bash(head -5 my-app/app/\\\\\\(dashboard\\\\\\)/dashboard/focus/page.tsx my-app/app/\\\\\\(dashboard\\\\\\)/dashboard/insights/page.tsx my-app/app/\\\\\\(dashboard\\\\\\)/dashboard/knowledge/page.tsx my-app/app/\\\\\\(dashboard\\\\\\)/dashboard/mind-center/page.tsx my-app/lib/server/analytics.ts)",
       "Bash(grep -r process.env. C:UsersamitrNext.js-MySQL-Projectnextjs-mysql-task-managermy-app --include=*.ts --include=*.tsx --exclude-dir=node_modules --exclude-dir=.next)",
-      "Bash(grep -r \"http://localhost\\\\|127\\\\.0\\\\.0\\\\.1\" C:UsersamitrNext.js-MySQL-Projectnextjs-mysql-task-managermy-app --include=*.ts --include=*.tsx --exclude-dir=node_modules --exclude-dir=.next)"
+      "Bash(grep -r \"http://localhost\\\\|127\\\\.0\\\\.0\\\\.1\" C:UsersamitrNext.js-MySQL-Projectnextjs-mysql-task-managermy-app --include=*.ts --include=*.tsx --exclude-dir=node_modules --exclude-dir=.next)",
+      "WebFetch(domain:nextjs-mysql-task-manager-production.up.railway.app)"
     ]
   }
 }
