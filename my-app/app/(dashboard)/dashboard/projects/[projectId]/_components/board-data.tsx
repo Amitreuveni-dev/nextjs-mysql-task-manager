@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { KanbanBoard } from "../client/kanban-board";
+import { KanbanBoard } from "./kanban-board";
 
 export async function BoardData({ projectId }: { projectId: number }) {
   const session = await auth();

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FolderOpen, CheckSquare, Clock, TrendingUp, Zap, ArrowRight, Kanban, Bot, Sparkles } from "lucide-react";
-import { SmartInsights } from "./_components/server/smart-insights";
+import { SmartInsights } from "./_components/smart-insights";
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 

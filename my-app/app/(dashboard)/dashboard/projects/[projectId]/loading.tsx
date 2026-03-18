@@ -1,4 +1,4 @@
-import { BoardSkeleton } from "./_components/client/board-skeleton";
+import { BoardSkeleton } from "./_components/board-skeleton";
 
 export default function KanbanLoading() {
   return (

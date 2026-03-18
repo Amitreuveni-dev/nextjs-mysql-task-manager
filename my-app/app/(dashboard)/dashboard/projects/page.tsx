@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { ProjectsGrid } from "./_components/server/projects-grid";
-import { ProjectsGridSkeleton } from "./_components/client/projects-grid-skeleton";
+import { ProjectsGrid } from "./_components/projects-grid";
+import { ProjectsGridSkeleton } from "./_components/projects-grid-skeleton";
 
 export const metadata = { title: "Projects — SyncroMind AI" };
 

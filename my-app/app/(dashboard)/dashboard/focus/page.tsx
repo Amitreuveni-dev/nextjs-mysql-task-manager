@@ -1,7 +1,7 @@
 import { Target, Flame, CheckSquare2, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getFocusTasks } from "@/lib/server/tasks";
-import { FocusTimer } from "./_components/client/focus-timer";
+import { FocusTimer } from "./_components/focus-timer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Focus Room — SyncroMind AI" };

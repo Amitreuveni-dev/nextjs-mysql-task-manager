@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { ProjectCard } from "../client/project-card";
-import { CreateProjectModal } from "../client/create-project-modal";
+import { ProjectCard } from "./project-card";
+import { CreateProjectModal } from "./create-project-modal";
 
 export async function ProjectsGrid() {
   const session = await auth();
