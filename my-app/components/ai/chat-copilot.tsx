@@ -12,7 +12,7 @@ import { bulkInsertAITasks, createProjectAndBulkInsertTasks } from "@/lib/server
 import Link from "next/link";
 
 type Project = { id: number; name: string };
-type AITask = { title: string; description?: string; priority?: string };
+type AITask = { title: string; description?: string; priority?: string; dueDate?: string };
 
 function parseTasksFromContent(content: string): AITask[] | null {
   const match = content.match(/```tasks-json\s*([\s\S]*?)```/);
@@ -129,7 +129,8 @@ function MessageBubble({ message, projects, onInserted }: {
                     )}
                     aria-hidden="true"
                   />
-                  <span className="truncate">{t.title}</span>
+                  <span className="truncate flex-1">{t.title}</span>
+                  {t.dueDate && <span className="text-muted-foreground/70 shrink-0">{t.dueDate}</span>}
                 </li>
               ))}
               {tasks.length > 3 && <li className="text-muted-foreground/70">+{tasks.length - 3} more…</li>}

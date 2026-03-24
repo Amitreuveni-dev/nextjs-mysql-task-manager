@@ -13,7 +13,7 @@ type CalendarTask = {
   title: string;
   status: string;
   priority: string;
-  dueDate: Date;
+  dueDate: Date | string;
   projectId: number;
   project: { name: string };
 };
@@ -29,26 +29,32 @@ function statusLabel(status: string) {
   return status === "COMPLETED" ? "Done" : status === "IN_PROGRESS" ? "In Progress" : "To Do";
 }
 
-export function CalendarGrid({ tasks, year, month, startOfMonth, endOfMonth, noDueDateCount }: {
+export function CalendarGrid({ tasks, year, month, noDueDateCount }: {
   tasks: CalendarTask[];
   year: number;
   month: number;
-  startOfMonth: Date;
-  endOfMonth: Date;
   noDueDateCount: number;
 }) {
   const router = useRouter();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Compute month bounds locally — avoids RSC Date serialization quirks
+  const startOfMonth = new Date(year, month, 1);
+  const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
   // Build calendar grid
   const firstDayOfWeek = startOfMonth.getDay(); // 0 = Sun
   const daysInMonth = endOfMonth.getDate();
 
-  // Tasks indexed by day-of-month
+  // Helper: parse dueDate safely (could be Date or ISO string from RSC)
+  const parseDate = (d: Date | string) => new Date(d);
+
+  // Tasks indexed by day-of-month (use local date components to avoid timezone shift)
   const tasksByDay: Record<number, CalendarTask[]> = {};
   for (const task of tasks) {
-    const d = new Date(task.dueDate);
+    const d = parseDate(task.dueDate);
+    // Compare using local time — avoids UTC-midnight timezone offset issues
     if (d.getFullYear() === year && d.getMonth() === month) {
       const day = d.getDate();
       tasksByDay[day] = [...(tasksByDay[day] ?? []), task];
@@ -57,11 +63,11 @@ export function CalendarGrid({ tasks, year, month, startOfMonth, endOfMonth, noD
 
   // Tasks outside this month (past & future)
   const pastOverdue = tasks.filter(t => {
-    const d = new Date(t.dueDate);
+    const d = parseDate(t.dueDate);
     return d < startOfMonth && t.status !== "COMPLETED";
   });
   const upcoming = tasks.filter(t => {
-    const d = new Date(t.dueDate);
+    const d = parseDate(t.dueDate);
     return d > endOfMonth;
   });
 
@@ -100,7 +106,7 @@ export function CalendarGrid({ tasks, year, month, startOfMonth, endOfMonth, noD
           {/* Calendar grid */}
           <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden" role="grid" aria-label={`${MONTH_NAMES[month]} ${year} calendar`}>
             {cells.map((day, i) => {
-              if (day === null) return <div key={`blank-${i}`} className="bg-background p-1 min-h-[4.5rem]" aria-hidden="true" />;
+              if (day === null) return <div key={`blank-${i}`} className="bg-background p-1 min-h-[5.5rem]" aria-hidden="true" />;
               const cellDate = new Date(year, month, day);
               cellDate.setHours(0, 0, 0, 0);
               const isToday = cellDate.getTime() === today.getTime();
@@ -114,7 +120,7 @@ export function CalendarGrid({ tasks, year, month, startOfMonth, endOfMonth, noD
                   role="gridcell"
                   aria-label={`${MONTH_NAMES[month]} ${day}${dayTasks.length > 0 ? `, ${dayTasks.length} task${dayTasks.length > 1 ? "s" : ""}` : ""}`}
                   className={cn(
-                    "bg-background p-1 min-h-[4.5rem] transition-colors",
+                    "bg-background p-1 min-h-[5.5rem] transition-colors",
                     isToday && "bg-primary/5 ring-1 ring-inset ring-primary/30",
                     hasOverdue && "bg-red-500/5"
                   )}

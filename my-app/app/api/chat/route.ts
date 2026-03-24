@@ -27,9 +27,13 @@ export async function POST(req: Request) {
       ).join("\n\n")
     : "No projects or tasks yet.";
 
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
   const result = streamText({
     model: anthropic("claude-haiku-4-5-20251001"),
     system: `You are an expert Task Productivity Copilot for SyncroMind AI. Help users plan, organize, and manage tasks efficiently.
+
+Today's date: ${today}
 
 User's current task context:
 ${context}
@@ -42,10 +46,13 @@ Your capabilities:
 
 When generating a task plan, ALWAYS end your response with a JSON block in this exact format:
 \`\`\`tasks-json
-[{"title":"Task title","description":"Optional details","priority":"HIGH"},{"title":"Another task","priority":"MEDIUM"}]
+[{"title":"Task title","description":"Optional details","priority":"HIGH","dueDate":"2026-04-01"},{"title":"Another task","priority":"MEDIUM"}]
 \`\`\`
 
-Rules for task JSON: priority must be HIGH, MEDIUM, or LOW. Titles max 100 chars, descriptions max 500 chars. Be actionable and specific.`,
+Rules for task JSON:
+- priority must be HIGH, MEDIUM, or LOW
+- dueDate is optional but SHOULD be included when the user's request implies a timeframe (e.g. "in 2 weeks", "by Friday", "sprint", "this month"). Format: YYYY-MM-DD. Base all dates from today (${today}).
+- Titles max 100 chars, descriptions max 500 chars. Be actionable and specific.`,
     messages: await convertToModelMessages(messages),
   });
 

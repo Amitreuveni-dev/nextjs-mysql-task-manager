@@ -19,9 +19,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
     monthIndex = m - 1;
   }
 
-  const startOfMonth = new Date(year, monthIndex, 1);
-  const endOfMonth = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
-
   // Fetch tasks with due dates in this month + adjacent months (for context)
   const tasks = await prisma.task.findMany({
     where: { project: { userId }, dueDate: { not: null } },
@@ -48,8 +45,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         tasks={tasks.map((t: typeof tasks[number]) => ({ ...t, dueDate: t.dueDate! }))}
         year={year}
         month={monthIndex}
-        startOfMonth={startOfMonth}
-        endOfMonth={endOfMonth}
         noDueDateCount={noDueDateCount}
       />
     </div>

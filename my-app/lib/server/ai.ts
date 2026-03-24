@@ -9,6 +9,7 @@ const AITaskSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]).default("MEDIUM"),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
 export type BulkInsertState = { error?: string; success?: string; count?: number; projectId?: number };
@@ -26,8 +27,13 @@ export async function createProjectAndBulkInsertTasks(
     if (!name || name.length > 50) return { error: "Invalid project name (1–50 chars)" };
 
     const validated = tasks
-      .map(t => { const r = AITaskSchema.safeParse(t); return r.success ? { ...r.data, status: "TODO" } : null; })
-      .filter(Boolean) as Array<{ title: string; description?: string; priority: "LOW" | "MEDIUM" | "HIGH"; status: string }>;
+      .map(t => {
+        const r = AITaskSchema.safeParse(t);
+        if (!r.success) return null;
+        const { dueDate, ...rest } = r.data;
+        return { ...rest, status: "TODO", dueDate: dueDate ? new Date(`${dueDate}T12:00:00`) : undefined };
+      })
+      .filter(Boolean) as Array<{ title: string; description?: string; priority: "LOW" | "MEDIUM" | "HIGH"; status: string; dueDate?: Date }>;
 
     if (!validated.length) return { error: "No valid tasks to insert" };
 
@@ -57,9 +63,11 @@ export async function bulkInsertAITasks(
     const validated = tasks
       .map(t => {
         const r = AITaskSchema.safeParse(t);
-        return r.success ? { ...r.data, projectId, status: "TODO" } : null;
+        if (!r.success) return null;
+        const { dueDate, ...rest } = r.data;
+        return { ...rest, projectId, status: "TODO", dueDate: dueDate ? new Date(`${dueDate}T12:00:00`) : undefined };
       })
-      .filter(Boolean) as Array<{ title: string; description?: string; priority: "LOW" | "MEDIUM" | "HIGH"; projectId: number; status: string }>;
+      .filter(Boolean) as Array<{ title: string; description?: string; priority: "LOW" | "MEDIUM" | "HIGH"; projectId: number; status: string; dueDate?: Date }>;
 
     if (!validated.length) return { error: "No valid tasks to insert" };
 
