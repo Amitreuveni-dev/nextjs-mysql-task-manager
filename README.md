@@ -227,6 +227,55 @@ Visit [http://localhost:3000](http://localhost:3000) — you'll be redirected to
 
 ---
 
+## Deploying to Vercel (with Railway MySQL)
+
+The app is deployed on **Vercel** with the database hosted on **Railway** (MySQL).
+
+### Why `.env` alone isn't enough
+
+Your local `.env` file is **never sent to Vercel**. You must set environment variables directly in the Vercel dashboard.
+
+### Step 1 — Get your Railway DATABASE_URL
+
+1. Open [railway.app](https://railway.app) → your project → your MySQL service
+2. Go to **Variables** tab → copy `DATABASE_URL`
+   - It looks like: `mysql://root:password@monorail.proxy.rlwy.net:12345/railway`
+
+### Step 2 — Set env vars in Vercel
+
+Go to your Vercel project → **Settings → Environment Variables** and add:
+
+| Key | Value |
+|-----|-------|
+| `DATABASE_URL` | Your Railway MySQL URL (from Step 1) |
+| `AUTH_SECRET` | Your secret (same as local) |
+| `AUTH_URL` | `https://your-app.vercel.app` (your actual Vercel domain) |
+| `ANTHROPIC_API_KEY` | Your Anthropic key |
+
+> **Common mistake:** leaving `DATABASE_URL` pointing to `localhost` — Vercel cannot reach your local machine.
+
+### Step 3 — Redeploy
+
+After saving the env vars, trigger a new deployment:
+
+```bash
+git commit --allow-empty -m "chore: trigger redeploy"
+git push
+```
+
+Or click **Redeploy** in the Vercel dashboard.
+
+### Step 4 — Run migrations on Railway
+
+If this is the first deploy, your Railway database needs the schema applied:
+
+```bash
+# Point your local CLI at the Railway DB temporarily
+DATABASE_URL="mysql://..." npx prisma migrate deploy
+```
+
+---
+
 ## Roadmap
 
 - [X] **Phase 1: Security & Foundation**

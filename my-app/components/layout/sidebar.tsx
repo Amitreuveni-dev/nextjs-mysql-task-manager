@@ -43,11 +43,10 @@ const SETTINGS: NavItem = { label: "Settings", href: "/dashboard/settings", icon
 
 // ─── NavLink ──────────────────────────────────────────────────────────────────
 
-function NavLink({ item, collapsed, active, rm }: {
-  item: NavItem; collapsed: boolean; active: boolean; rm: boolean | null;
+function NavLink({ item, collapsed, iconsCenter, active, rm }: {
+  item: NavItem; collapsed: boolean; iconsCenter: boolean; active: boolean; rm: boolean | null;
 }) {
   const Icon = item.icon;
-  const spring = rm ? { duration: 0 } : { type: "spring" as const, stiffness: 380, damping: 35 };
 
   const link = (
     <Link
@@ -57,20 +56,25 @@ function NavLink({ item, collapsed, active, rm }: {
       className={cn(
         "relative flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-medium transition-colors duration-150",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+        iconsCenter && "justify-center px-0",
         active
           ? "text-white"
           : "text-sidebar-foreground/65 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
       )}
     >
-      {/* Sliding active-state pill — shared layoutId animates between items */}
-      {active && (
-        <motion.div
-          layoutId="sidebar-active"
-          className="absolute inset-0 rounded-xl gradient-primary shadow-md shadow-primary/20"
-          transition={spring}
-          aria-hidden="true"
-        />
-      )}
+      <AnimatePresence initial={false}>
+        {active && (
+          <motion.div
+            key="active-pill"
+            initial={rm ? {} : { opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={rm ? {} : { opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 rounded-xl gradient-primary shadow-md shadow-primary/20"
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
       <Icon className="relative z-10 h-4 w-4 shrink-0" aria-hidden="true" />
       <AnimatePresence initial={false}>
         {!collapsed && (
@@ -93,7 +97,7 @@ function NavLink({ item, collapsed, active, rm }: {
     <motion.div whileTap={rm ? {} : { scale: 0.97 }}>{link}</motion.div>
   );
 
-  return collapsed ? (
+  return iconsCenter ? (
     <Tooltip>
       <TooltipTrigger asChild>{tapped}</TooltipTrigger>
       <TooltipContent side="right" className="rounded-lg">{item.label}</TooltipContent>
@@ -107,6 +111,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const rm = useReducedMotion();
   const [collapsed, setCollapsed] = React.useState(false);
+  const [iconsCenter, setIconsCenter] = React.useState(false);
 
   const isActive = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
@@ -115,11 +120,21 @@ export function Sidebar() {
     ? { duration: 0 }
     : { type: "spring" as const, stiffness: 300, damping: 32 };
 
+  const handleCollapseToggle = () => {
+    if (collapsed) {
+      setIconsCenter(false);
+      setCollapsed(false);
+    } else {
+      setCollapsed(true);
+    }
+  };
+
   return (
     <TooltipProvider delayDuration={0}>
       <motion.aside
         animate={{ width: collapsed ? "4rem" : "16rem" }}
         transition={widthSpring}
+        onAnimationComplete={() => { if (collapsed) setIconsCenter(true); }}
         className="glass-sidebar relative flex h-full shrink-0 flex-col border-r border-sidebar-border/60 text-sidebar-foreground"
         aria-label="Main navigation"
       >
@@ -178,7 +193,7 @@ export function Sidebar() {
               </AnimatePresence>
               <div className="space-y-0.5">
                 {group.items.map((item) => (
-                  <NavLink key={item.href} item={item} collapsed={collapsed} active={isActive(item)} rm={rm} />
+                  <NavLink key={item.href} item={item} collapsed={collapsed} iconsCenter={iconsCenter} active={isActive(item)} rm={rm} />
                 ))}
               </div>
             </div>
@@ -189,11 +204,11 @@ export function Sidebar() {
 
         {/* ── Bottom: settings + collapse toggle ────────────────────────────── */}
         <div className="space-y-0.5 p-2">
-          <NavLink item={SETTINGS} collapsed={collapsed} active={isActive(SETTINGS)} rm={rm} />
+          <NavLink item={SETTINGS} collapsed={collapsed} iconsCenter={iconsCenter} active={isActive(SETTINGS)} rm={rm} />
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCollapsed((p) => !p)}
+            onClick={handleCollapseToggle}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-expanded={!collapsed}
             className="w-full rounded-xl text-sidebar-foreground/50 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"

@@ -5,14 +5,15 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefi
 
 function createPrismaClient() {
   const url = new URL(process.env.DATABASE_URL!);
+  const host = url.hostname === "localhost" ? "127.0.0.1" : url.hostname;
   const adapter = new PrismaMariaDb({
-    host: url.hostname,
+    host,
     port: Number(url.port) || 3306,
     user: url.username,
     password: url.password,
     database: url.pathname.slice(1),
     allowPublicKeyRetrieval: true,
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined,
   });
   return new PrismaClient({ adapter, log: ["error", "warn"] });
 }

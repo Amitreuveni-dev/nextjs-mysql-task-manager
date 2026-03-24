@@ -25,15 +25,15 @@ export function PasswordForm() {
           {state.success && <p className="text-sm text-green-600 dark:text-green-400" role="status" aria-live="polite">{state.success}</p>}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="currentPassword">Current password</Label>
-            <Input id="currentPassword" name="currentPassword" type="password" autoComplete="current-password" placeholder="••••••••" required aria-required="true" disabled={isPending} />
+            <Input id="currentPassword" name="currentPassword" type="password" autoComplete="current-password" placeholder="Your-current-password" required aria-required="true" disabled={isPending} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="newPassword">New password</Label>
-            <Input id="newPassword" name="newPassword" type="password" autoComplete="new-password" placeholder="••••••••" required aria-required="true" disabled={isPending} />
+            <Input id="newPassword" name="newPassword" type="password" autoComplete="new-password" placeholder="Your-new-password" required aria-required="true" disabled={isPending} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="confirmPassword">Confirm new password</Label>
-            <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" placeholder="••••••••" required aria-required="true" disabled={isPending} />
+            <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" placeholder="Your-new-password-again" required aria-required="true" disabled={isPending} />
           </div>
           <Button type="submit" className="self-start" disabled={isPending} aria-label={isPending ? "Updating password..." : "Update password"}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
