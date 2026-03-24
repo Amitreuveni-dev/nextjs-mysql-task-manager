@@ -54,7 +54,7 @@ export function KanbanColumn({ id, label, accent, headerBg, countCn, tasks, onAd
         role="list"
         aria-label={`${label} tasks`}
         className={cn(
-          "flex flex-col gap-2 flex-1 min-h-[12rem] p-2 mx-1 mb-1 rounded-lg transition-colors",
+          "flex flex-col gap-2 min-h-[12rem] max-h-[60vh] overflow-y-auto p-2 mx-1 mb-1 rounded-lg transition-colors",
           isOver && "bg-primary/5 ring-2 ring-primary/20 ring-inset"
         )}
       >

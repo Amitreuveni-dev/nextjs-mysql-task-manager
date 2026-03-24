@@ -4,11 +4,12 @@ import { useChat } from "@ai-sdk/react";
 import { UIMessage, isTextUIPart, DefaultChatTransport } from "ai";
 import { useRef, useEffect, useState } from "react";
 import { useReducedMotion, motion, AnimatePresence } from "framer-motion";
-import { Bot, X, Send, Loader2, ListPlus, Trash2 } from "lucide-react";
+import { Bot, X, Send, Loader2, ListPlus, Trash2, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { bulkInsertAITasks } from "@/lib/server/ai";
+import { bulkInsertAITasks, createProjectAndBulkInsertTasks } from "@/lib/server/ai";
+import Link from "next/link";
 
 type Project = { id: number; name: string };
 type AITask = { title: string; description?: string; priority?: string };
@@ -33,6 +34,8 @@ function getTextContent(message: UIMessage): string {
 
 // ── Message Bubble ────────────────────────────────────────────────────────────
 
+const COLLAPSE_AT = 320;
+
 function MessageBubble({ message, projects, onInserted }: {
   message: UIMessage;
   projects: Project[];
@@ -41,17 +44,46 @@ function MessageBubble({ message, projects, onInserted }: {
   const [selectedProject, setSelectedProject] = useState<number>(projects[0]?.id ?? 0);
   const [inserting, setInserting] = useState(false);
   const [inserted, setInserted] = useState(false);
+  const [insertedProjectId, setInsertedProjectId] = useState<number | null>(null);
+  const [insertError, setInsertError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [creatingNew, setCreatingNew] = useState(projects.length === 0);
+  const [newProjectName, setNewProjectName] = useState("");
 
   const content = getTextContent(message);
   const tasks = message.role === "assistant" ? parseTasksFromContent(content) : null;
   const displayContent = content.replace(/```tasks-json[\s\S]*?```/g, "").trim();
+  const isLong = displayContent.length > COLLAPSE_AT;
+  const shownContent = isLong && !expanded ? displayContent.slice(0, COLLAPSE_AT) + "…" : displayContent;
 
   async function handleInsert() {
     if (!selectedProject || !tasks) return;
     setInserting(true);
+    setInsertError(null);
     const result = await bulkInsertAITasks(selectedProject, tasks);
     setInserting(false);
-    if (result.count) { setInserted(true); onInserted(result.count); }
+    if (result.count) {
+      setInserted(true);
+      setInsertedProjectId(selectedProject);
+      onInserted(result.count);
+    } else if (result.error) {
+      setInsertError(result.error);
+    }
+  }
+
+  async function handleCreateAndInsert() {
+    if (!newProjectName.trim() || !tasks) return;
+    setInserting(true);
+    setInsertError(null);
+    const result = await createProjectAndBulkInsertTasks(newProjectName.trim(), tasks);
+    setInserting(false);
+    if (result.count && result.projectId) {
+      setInserted(true);
+      setInsertedProjectId(result.projectId);
+      onInserted(result.count);
+    } else if (result.error) {
+      setInsertError(result.error);
+    }
   }
 
   return (
@@ -70,7 +102,19 @@ function MessageBubble({ message, projects, onInserted }: {
           "rounded-lg px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap",
           message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted/60 text-foreground"
         )}>
-          {displayContent || "…"}
+          {shownContent || "…"}
+          {isLong && (
+            <button
+              onClick={() => setExpanded(v => !v)}
+              className="flex items-center gap-0.5 mt-2 text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded"
+              aria-expanded={expanded}
+            >
+              {expanded
+                ? <><ChevronUp className="h-3 w-3" aria-hidden="true" />Show less</>
+                : <><ChevronDown className="h-3 w-3" aria-hidden="true" />Show full response</>
+              }
+            </button>
+          )}
         </div>
 
         {tasks && tasks.length > 0 && !inserted && (
@@ -90,36 +134,76 @@ function MessageBubble({ message, projects, onInserted }: {
               ))}
               {tasks.length > 3 && <li className="text-muted-foreground/70">+{tasks.length - 3} more…</li>}
             </ul>
-            {projects.length > 1 ? (
-              <select
-                value={selectedProject}
-                onChange={e => setSelectedProject(Number(e.target.value))}
-                className="w-full text-xs rounded border border-border bg-background px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Select project for task insertion"
-              >
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+
+            {creatingNew ? (
+              <div className="space-y-1.5">
+                <input
+                  type="text"
+                  placeholder="New project name…"
+                  value={newProjectName}
+                  onChange={e => setNewProjectName(e.target.value)}
+                  maxLength={50}
+                  className="w-full text-xs rounded border border-border bg-background px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="New project name"
+                />
+                {projects.length > 0 && (
+                  <button
+                    onClick={() => setCreatingNew(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none"
+                  >
+                    ← Use existing project
+                  </button>
+                )}
+              </div>
             ) : (
-              <p className="text-muted-foreground/70">→ {projects[0]?.name}</p>
+              <div className="space-y-1">
+                {projects.length > 1
+                  ? <select value={selectedProject} onChange={e => setSelectedProject(Number(e.target.value))} className="w-full text-xs rounded border border-border bg-background px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Select project for task insertion">
+                      {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  : <p className="text-muted-foreground/70">→ {projects[0].name}</p>
+                }
+                <button
+                  onClick={() => setCreatingNew(true)}
+                  className="text-xs text-primary hover:underline focus-visible:outline-none"
+                >
+                  + Create new project
+                </button>
+              </div>
             )}
+
+            {insertError && (
+              <p className="text-red-500 font-medium" role="alert">{insertError}</p>
+            )}
+
             <Button
               size="sm"
               className="w-full h-7 text-xs"
-              onClick={handleInsert}
-              disabled={inserting || !selectedProject}
-              aria-label={`Insert ${tasks.length} AI-generated tasks`}
+              onClick={creatingNew ? handleCreateAndInsert : handleInsert}
+              disabled={inserting || (creatingNew ? !newProjectName.trim() : !selectedProject)}
+              aria-label={creatingNew ? `Create project and add ${tasks.length} tasks` : `Insert ${tasks.length} AI-generated tasks`}
             >
               {inserting
-                ? <><Loader2 className="h-3 w-3 animate-spin mr-1" aria-hidden="true" />Inserting…</>
-                : <><ListPlus className="h-3 w-3 mr-1" aria-hidden="true" />Insert {tasks.length} Tasks</>
+                ? <><Loader2 className="h-3 w-3 animate-spin mr-1" aria-hidden="true" />Working…</>
+                : creatingNew
+                  ? <><ListPlus className="h-3 w-3 mr-1" aria-hidden="true" />Create Project & Add {tasks.length} Tasks</>
+                  : <><ListPlus className="h-3 w-3 mr-1" aria-hidden="true" />Insert {tasks.length} Tasks</>
               }
             </Button>
           </div>
         )}
-        {inserted && (
-          <p className="text-xs text-green-600 dark:text-green-400" role="status" aria-live="polite">
-            Tasks added to your board!
-          </p>
+
+        {inserted && insertedProjectId && (
+          <div className="flex items-center justify-between rounded-md bg-green-500/10 border border-green-500/20 px-3 py-2" role="status" aria-live="polite">
+            <p className="text-xs text-green-600 dark:text-green-400 font-medium">Tasks added to your board!</p>
+            <Link
+              href={`/dashboard/projects/${insertedProjectId}`}
+              className="flex items-center gap-1 text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded"
+              aria-label="Open project board"
+            >
+              View board <ExternalLink className="h-3 w-3" aria-hidden="true" />
+            </Link>
+          </div>
         )}
       </div>
     </div>
