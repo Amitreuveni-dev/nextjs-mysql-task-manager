@@ -15,14 +15,17 @@ export async function POST(req: Request) {
 
   const projects = await prisma.project.findMany({
     where: { userId },
-    include: { tasks: { select: { title: true, status: true, priority: true } } },
+    include: { tasks: { select: { id: true, title: true, status: true, priority: true, dueDate: true } } },
   });
 
   const context = projects.length > 0
     ? projects.map(p =>
-        `Project "${p.name}" (${p.tasks.length} tasks):\n` +
+        `Project "${p.name}" (id:${p.id}, ${p.tasks.length} tasks):\n` +
         (p.tasks.length > 0
-          ? p.tasks.map(t => `  • [${t.status}][${t.priority}] ${t.title}`).join("\n")
+          ? p.tasks.map(t =>
+              `  • [id:${t.id}][${t.status}][${t.priority}] ${t.title}` +
+              (t.dueDate ? ` — due ${new Date(t.dueDate).toISOString().split("T")[0]}` : "")
+            ).join("\n")
           : "  (no tasks yet)")
       ).join("\n\n")
     : "No projects or tasks yet.";
@@ -44,14 +47,21 @@ Your capabilities:
 - Suggest priorities and actionable next steps
 - Break down complex goals into manageable tasks
 
-When generating a task plan, ALWAYS end your response with a JSON block in this exact format:
+When generating NEW tasks, end your response with:
 \`\`\`tasks-json
 [{"title":"Task title","description":"Optional details","priority":"HIGH","dueDate":"2026-04-01"},{"title":"Another task","priority":"MEDIUM"}]
 \`\`\`
 
-Rules for task JSON:
+When EDITING or UPDATING existing tasks (the user says things like "change", "update", "reschedule", "mark as", "set priority"), end your response with:
+\`\`\`tasks-update-json
+[{"id":1,"priority":"HIGH"},{"id":2,"dueDate":"2026-05-01"},{"id":3,"status":"IN_PROGRESS","title":"New title"}]
+\`\`\`
+
+Rules for both JSON formats:
 - priority must be HIGH, MEDIUM, or LOW
-- dueDate is optional but SHOULD be included when the user's request implies a timeframe (e.g. "in 2 weeks", "by Friday", "sprint", "this month"). Format: YYYY-MM-DD. Base all dates from today (${today}).
+- status must be TODO, IN_PROGRESS, or COMPLETED
+- dueDate format: YYYY-MM-DD. Base all dates from today (${today}). Include dueDate when the user implies a timeframe.
+- For updates: only include fields that need to change. "id" is required and must match a real task id from the context above.
 - Titles max 100 chars, descriptions max 500 chars. Be actionable and specific.`,
     messages: await convertToModelMessages(messages),
   });

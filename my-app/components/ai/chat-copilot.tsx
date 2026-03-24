@@ -4,15 +4,16 @@ import { useChat } from "@ai-sdk/react";
 import { UIMessage, isTextUIPart, DefaultChatTransport } from "ai";
 import { useRef, useEffect, useState } from "react";
 import { useReducedMotion, motion, AnimatePresence } from "framer-motion";
-import { Bot, X, Send, Loader2, ListPlus, Trash2, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Bot, X, Send, Loader2, ListPlus, Trash2, ChevronDown, ChevronUp, ExternalLink, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { bulkInsertAITasks, createProjectAndBulkInsertTasks } from "@/lib/server/ai";
+import { bulkInsertAITasks, createProjectAndBulkInsertTasks, bulkUpdateAITasks } from "@/lib/server/ai";
 import Link from "next/link";
 
 type Project = { id: number; name: string };
 type AITask = { title: string; description?: string; priority?: string; dueDate?: string };
+type AITaskUpdate = { id: number; title?: string; description?: string; priority?: string; status?: string; dueDate?: string | null };
 
 function parseTasksFromContent(content: string): AITask[] | null {
   const match = content.match(/```tasks-json\s*([\s\S]*?)```/);
@@ -20,6 +21,17 @@ function parseTasksFromContent(content: string): AITask[] | null {
   try {
     const parsed = JSON.parse(match[1].trim());
     return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseUpdatesFromContent(content: string): AITaskUpdate[] | null {
+  const match = content.match(/```tasks-update-json\s*([\s\S]*?)```/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[1].trim());
+    return Array.isArray(parsed) ? parsed.filter((u: AITaskUpdate) => typeof u.id === "number") : null;
   } catch {
     return null;
   }
@@ -50,9 +62,17 @@ function MessageBubble({ message, projects, onInserted }: {
   const [creatingNew, setCreatingNew] = useState(projects.length === 0);
   const [newProjectName, setNewProjectName] = useState("");
 
+  const [updateApplied, setUpdateApplied] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updatedProjectId, setUpdatedProjectId] = useState<number | null>(null);
+
   const content = getTextContent(message);
   const tasks = message.role === "assistant" ? parseTasksFromContent(content) : null;
-  const displayContent = content.replace(/```tasks-json[\s\S]*?```/g, "").trim();
+  const updates = message.role === "assistant" ? parseUpdatesFromContent(content) : null;
+  const displayContent = content
+    .replace(/```tasks-json[\s\S]*?```/g, "")
+    .replace(/```tasks-update-json[\s\S]*?```/g, "")
+    .trim();
   const isLong = displayContent.length > COLLAPSE_AT;
   const shownContent = isLong && !expanded ? displayContent.slice(0, COLLAPSE_AT) + "…" : displayContent;
 
@@ -83,6 +103,21 @@ function MessageBubble({ message, projects, onInserted }: {
       onInserted(result.count);
     } else if (result.error) {
       setInsertError(result.error);
+    }
+  }
+
+  async function handleApplyUpdates() {
+    if (!updates?.length) return;
+    setInserting(true);
+    setUpdateError(null);
+    const result = await bulkUpdateAITasks(updates);
+    setInserting(false);
+    if (result.updatedCount) {
+      setUpdateApplied(true);
+      if (result.projectId) setUpdatedProjectId(result.projectId);
+      onInserted(result.updatedCount);
+    } else if (result.error) {
+      setUpdateError(result.error);
     }
   }
 
@@ -204,6 +239,52 @@ function MessageBubble({ message, projects, onInserted }: {
             >
               View board <ExternalLink className="h-3 w-3" aria-hidden="true" />
             </Link>
+          </div>
+        )}
+
+        {/* Task updates panel */}
+        {updates && updates.length > 0 && !updateApplied && (
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 space-y-2 text-xs">
+            <p className="font-medium text-amber-600 dark:text-amber-400">{updates.length} task update{updates.length !== 1 ? "s" : ""} ready</p>
+            <ul className="space-y-1 text-muted-foreground" role="list">
+              {updates.slice(0, 3).map((u, i) => (
+                <li key={i} className="flex items-center gap-1.5">
+                  <Pencil className="h-3 w-3 shrink-0 text-amber-500" aria-hidden="true" />
+                  <span className="truncate flex-1">{u.title ?? `Task #${u.id}`}</span>
+                  {u.status && <span className="shrink-0 text-muted-foreground/70">{u.status}</span>}
+                  {u.dueDate && <span className="shrink-0 text-muted-foreground/70">{u.dueDate}</span>}
+                </li>
+              ))}
+              {updates.length > 3 && <li className="text-muted-foreground/70">+{updates.length - 3} more…</li>}
+            </ul>
+            {updateError && <p className="text-red-500 font-medium" role="alert">{updateError}</p>}
+            <Button
+              size="sm"
+              className="w-full h-7 text-xs bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={handleApplyUpdates}
+              disabled={inserting}
+              aria-label={`Apply ${updates.length} task updates`}
+            >
+              {inserting
+                ? <><Loader2 className="h-3 w-3 animate-spin mr-1" aria-hidden="true" />Applying…</>
+                : <><Pencil className="h-3 w-3 mr-1" aria-hidden="true" />Apply {updates.length} Update{updates.length !== 1 ? "s" : ""}</>
+              }
+            </Button>
+          </div>
+        )}
+
+        {updateApplied && (
+          <div className="flex items-center justify-between rounded-md bg-amber-500/10 border border-amber-500/20 px-3 py-2" role="status" aria-live="polite">
+            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Tasks updated!</p>
+            {updatedProjectId && (
+              <Link
+                href={`/dashboard/projects/${updatedProjectId}`}
+                className="flex items-center gap-1 text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded"
+                aria-label="Open project board"
+              >
+                View board <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </Link>
+            )}
           </div>
         )}
       </div>
